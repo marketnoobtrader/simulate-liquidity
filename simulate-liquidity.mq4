@@ -6,7 +6,7 @@
 #property copyright "neo"
 #property link      "https://t.me/pip_to_pip"
 #property description "[FREE]@pip_to_pip"
-#property version   "2.00"
+#property version   "3.0"
 #property indicator_chart_window
 
 #include "tools.mqh"
@@ -176,6 +176,24 @@ void calculatePriceDistance(double &distances[], int index1, int index2)
         distances[pos] = MathAbs(High[i] - Low[i]);
    }
 
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double multiplyUntilValid(double lValue, double rValue, double limit, bool isHigh)
+   {
+    while(true)
+       {
+        lValue += rValue;
+        if((isHigh && lValue >= limit) || (!isHigh && lValue <= limit))
+           {
+            return lValue;
+           }
+
+       }
+
+   }
+
 //+------------------------------------------------------------------+
 //| Adjust raw price distances to projected price levels             |
 //+------------------------------------------------------------------+
@@ -185,23 +203,14 @@ void CalculateAdjustedPrices(double &distances[], const double &source[], bool i
     int start = MathMax(indexStart, indexEnd);
     int end   = MathMin(indexStart, indexEnd);
     int direction = isHigh ? 1 : -1;
-
     int idx = ArraySize(distances) - 1;
-    double result[];
-    int count = 0;
 
+    double adj;
     for(int i = start; i >= end; i--, idx--)
        {
-        double adj = source[i] + distances[idx] * direction;
-        if((isHigh && adj >= limit) || (!isHigh && adj <= limit))
-           {
-            ArrayResize(result, count + 1);
-            result[count++] = adj;
-           }
+        adj = multiplyUntilValid(source[i], distances[idx] * direction, limit, isHigh);
+        distances[idx] = adj;
        }
-
-    ArrayResize(distances, count);
-    ArrayCopy(distances, result);
    }
 
 //+------------------------------------------------------------------+
